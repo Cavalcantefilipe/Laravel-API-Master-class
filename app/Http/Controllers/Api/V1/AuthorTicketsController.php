@@ -12,7 +12,7 @@ use App\Traits\ApiResponses;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
-class AuthorTicketsController extends Controller
+class AuthorTicketsController extends ApiController
 {
     use ApiResponses;
     /**
@@ -74,8 +74,19 @@ class AuthorTicketsController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($author_id, $ticket_id)
     {
-        //
+        try {
+            $ticket = Ticket::findOrFail($ticket_id);
+
+            if ($ticket->user_id == $author_id) {
+                $ticket->delete();
+                return $this->ok('Ticket deleted successfully.');
+            }
+
+            return $this->error('Ticket cannot be found', 403);
+        } catch (ModelNotFoundException $e) {
+            return $this->error('Ticket cannot be found', 404);
+        }
     }
 }
