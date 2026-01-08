@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
-    Route::middleware('auth:sanctum')->apiResource('tickets', TicketController::class);
-    Route::middleware('auth:sanctum')->apiResource('authors', AuthorController::class);
-    Route::middleware('auth:sanctum')->apiResource('authors.tickets', AuthorTicketsController::class);
+    Route::apiResource('tickets', TicketController::class)->except(['update']);
+    Route::put('tickets/{ticket}', [TicketController::class, 'replace']);
+
+    Route::apiResource('authors', AuthorController::class);
+    Route::apiResource('authors.tickets', AuthorTicketsController::class)->except(['update']);
+    Route::put('authors/{author_id}/tickets/{ticket}', [AuthorTicketsController::class, 'replace']);
 });
