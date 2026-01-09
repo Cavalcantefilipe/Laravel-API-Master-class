@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Filters\V1\TicketFilter;
 use App\Http\Requests\Api\V1\ReplaceTicketRequest;
 use App\Http\Requests\Api\V1\StoreTicketRequest;
+use App\Http\Requests\Api\V1\UpdateTicketRequest;
 use App\Http\Resources\V1\TicketResource;
 use App\Models\Ticket;
 use App\Models\User;
@@ -38,22 +39,22 @@ class AuthorTicketsController extends ApiController
             ]);
         }
 
-        $model = [
-            'title' => $request->input('data.attributes.title'),
-            'description' => $request->input('data.attributes.description'),
-            'status' => $request->input('data.attributes.status'),
-            'user_id' => $user->id,
-        ];
-
-        return new TicketResource(Ticket::create($model));
+        return new TicketResource(Ticket::create($request->mappedAttributes()));
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(string $author_id, string $ticket_id)
     {
-        //
+        try {
+            $ticket = Ticket::where('user_id', $author_id)->findOrFail($ticket_id);
+            return new TicketResource($ticket);
+        } catch (ModelNotFoundException $e) {
+            return $this->ok('Ticket not found', [
+                'error' => 'The provided ticket id does not exists.',
+            ]);
+        }
     }
 
     /**
@@ -67,9 +68,20 @@ class AuthorTicketsController extends ApiController
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateTicketRequest $request,  $author_id, $ticket_id)
     {
-        //
+        try {
+            $ticket = Ticket::findOrFail($ticket_id);
+
+            if ($ticket->user_id == $author_id) {
+                return $ticket->update($request->mappedAttributes());
+            }
+            return $this->error('Ticket cannot be found', 403);
+        } catch (ModelNotFoundException $e) {
+            return $this->ok('Ticket not found', [
+                'error' => 'The provided ticket id does not exists.',
+            ]);
+        }
     }
 
     /**
@@ -81,13 +93,7 @@ class AuthorTicketsController extends ApiController
             $ticket = Ticket::findOrFail($ticket_id);
 
             if ($ticket->user_id == $author_id) {
-                $model = [
-                    'title' => $request->input('data.attributes.title'),
-                    'description' => $request->input('data.attributes.description'),
-                    'status' => $request->input('data.attributes.status'),
-                    'user_id' => $request->input('data.relationships.author.data.id'),
-                ];
-                return $ticket->update($model);
+                return $ticket->update($request->mappedAttributes());
             }
             return $this->error('Ticket cannot be found', 403);
         } catch (ModelNotFoundException $e) {
