@@ -47,7 +47,5 @@ class TicketPolicy
         } else if ($user->tokenCan(Abilities::UpdateOwnTicket)) {
             return $user->id === $ticket->user_id;
         }
-
-        return false;
     }
 }

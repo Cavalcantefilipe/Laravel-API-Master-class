@@ -42,8 +42,6 @@ class TicketController extends ApiController
         } catch (AuthorizationException $e) {
             return $this->error('You are not authorized to create a ticket.', 403);
         }
-
-        return new TicketResource(Ticket::create($request->mappedAttributes()));
     }
 
     /**
