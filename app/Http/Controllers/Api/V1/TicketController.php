@@ -11,6 +11,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use App\Policies\V1\TicketPolicy;
 use App\Traits\ApiResponses;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Gate;
 
@@ -34,15 +35,12 @@ class TicketController extends ApiController
     public function store(StoreTicketRequest $request)
     {
         try {
-            $user = User::findOrFail($request->input('data.relationships.author.data.id'));
 
-            $this->isAble('store', null);
+            $this->isAble('store', Ticket::class);
 
             return new TicketResource(Ticket::create($request->mappedAttributes()));
-        } catch (ModelNotFoundException $e) {
-            return $this->ok('User not found', [
-                'error' => 'The provided user id does not exists.',
-            ]);
+        } catch (AuthorizationException $e) {
+            return $this->error('You are not authorized to create a ticket.', 403);
         }
 
         return new TicketResource(Ticket::create($request->mappedAttributes()));

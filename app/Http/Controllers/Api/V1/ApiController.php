@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Models\Ticket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class ApiController extends Controller
 {
+
+    protected $policyClass;
 
     public function include(string $relationship): bool
     {
